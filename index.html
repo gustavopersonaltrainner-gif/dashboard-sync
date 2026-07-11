@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gustavo Personal — Painel de Gestão de Clientes</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Gustavo Personal <span>/ Gestão de Clientes</span></h1>
+    <p id="header-sub">Painel de controle de alunos e contratos</p>
+  </div>
+  <div class="header-right">
+    <div class="badge-update" id="badge-update">📅 Abr – Jul 2026</div>
+    <button class="btn-primary" onclick="openClientModal(null)">+ Novo Cliente</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div>
+  <div class="tab" data-tab="clientes" onclick="switchTab('clientes')">Clientes Ativos</div>
+  <div class="tab" data-tab="registros" onclick="switchTab('registros')">Todos os Registros</div>
+  <div class="tab" data-tab="faltas" onclick="switchTab('faltas')">Faltas &amp; Ausências</div>
+  <div class="tab" data-tab="config" onclick="switchTab('config')">Configurações</div>
+</div>
+
+<div class="main">
+
+  <!-- ===== DASHBOARD ===== -->
+  <div id="tab-dashboard">
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Faturamento Mensal</div>
+        <div class="kpi-value green" id="kpi-faturamento">—</div>
+        <div class="kpi-sub" id="kpi-faturamento-sub">soma dos clientes ativos</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Clientes Ativos</div>
+        <div class="kpi-value blue" id="kpi-ativos">—</div>
+        <div class="kpi-sub">com aula em jul/26</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Congelados</div>
+        <div class="kpi-value yellow" id="kpi-congelados">—</div>
+        <div class="kpi-sub">contrato pausado</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Encerrados</div>
+        <div class="kpi-value red" id="kpi-encerrados">—</div>
+        <div class="kpi-sub">sem aula há mais tempo</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Cancelados</div>
+        <div class="kpi-value muted" id="kpi-cancelados">—</div>
+        <div class="kpi-sub">contrato cancelado</div>
+      </div>
+    </div>
+
+    <div class="alerts-row">
+      <div class="alert-card warn" onclick="openAlertModal('protocolo')">
+        <div class="a-top"><span class="a-title">⚡ Atualizar Protocolo</span><span class="a-count" id="alert-protocolo-count">0</span></div>
+        <div class="a-desc">Clientes na última semana do ciclo atual — hora de montar o próximo treino.</div>
+      </div>
+      <div class="alert-card info" onclick="openAlertModal('renovacao')">
+        <div class="a-top"><span class="a-title">📆 Renovações</span><span class="a-count" id="alert-renovacao-count">0</span></div>
+        <div class="a-desc">Contratos vencendo em até 30 dias.</div>
+      </div>
+      <div class="alert-card danger" onclick="openAlertModal('encerrados')">
+        <div class="a-top"><span class="a-title">🔁 Ciclos Encerrados</span><span class="a-count" id="alert-encerrados-count">0</span></div>
+        <div class="a-desc">Alunos que podem ser reativados.</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <span class="controls-label" style="font-size:13px;color:var(--muted)">Aulas por mês:</span>
+      <div class="month-btns">
+        <button class="month-btn" data-mes="2026-04" onclick="filtrarMes('2026-04')">Abril</button>
+        <button class="month-btn" data-mes="2026-05" onclick="filtrarMes('2026-05')">Maio</button>
+        <button class="month-btn" data-mes="2026-06" onclick="filtrarMes('2026-06')">Junho</button>
+        <button class="month-btn active" data-mes="2026-07" onclick="filtrarMes('2026-07')">Julho</button>
+        <button class="month-btn" data-mes="total" onclick="filtrarMes('total')">Total</button>
+      </div>
+      <input class="search-box" type="text" placeholder="🔍  Buscar aluno…" id="search-dash" oninput="renderTable()">
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Aluno</th>
+            <th>Status</th>
+            <th>Aulas (período)</th>
+            <th>Tendência Abr→Jul</th>
+            <th>Última aula</th>
+            <th>Faltas reg.</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-dash"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== CLIENTES ATIVOS (CARDS) ===== -->
+  <div id="tab-clientes" class="section-hidden">
+    <div class="controls">
+      <div class="status-btns" id="status-filter-cards">
+        <button class="status-btn active" data-status="Ativo" onclick="filtrarStatusCards('Ativo')">Ativo</button>
+        <button class="status-btn" data-status="Congelado" onclick="filtrarStatusCards('Congelado')">Congelado</button>
+        <button class="status-btn" data-status="Encerrado" onclick="filtrarStatusCards('Encerrado')">Encerrado</button>
+        <button class="status-btn" data-status="Cancelado" onclick="filtrarStatusCards('Cancelado')">Cancelado</button>
+        <button class="status-btn" data-status="todos" onclick="filtrarStatusCards('todos')">Todos</button>
+      </div>
+      <input class="search-box" type="text" placeholder="🔍  Buscar aluno…" id="search-cards" oninput="renderCards()">
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </div>
+
+  <!-- ===== TODOS OS REGISTROS (TABELA) ===== -->
+  <div id="tab-registros" class="section-hidden">
+    <div class="controls">
+      <div class="status-btns" id="status-filter-table">
+        <button class="status-btn active" data-status="todos" onclick="filtrarStatusTable('todos')">Todos</button>
+        <button class="status-btn" data-status="Ativo" onclick="filtrarStatusTable('Ativo')">Ativo</button>
+        <button class="status-btn" data-status="Congelado" onclick="filtrarStatusTable('Congelado')">Congelado</button>
+        <button class="status-btn" data-status="Encerrado" onclick="filtrarStatusTable('Encerrado')">Encerrado</button>
+        <button class="status-btn" data-status="Cancelado" onclick="filtrarStatusTable('Cancelado')">Cancelado</button>
+      </div>
+      <button class="btn-add secondary" onclick="exportToCSV()" style="margin-left: auto;">📥 Exportar CSV</button>
+      <input class="search-box" type="text" placeholder="🔍  Buscar aluno…" id="search-registros" oninput="renderRegistros()">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Aluno</th>
+            <th>Status</th>
+            <th>Programa</th>
+            <th>Contrato</th>
+            <th>Valor</th>
+            <th>Início</th>
+            <th>Fim</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-registros"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== FALTAS ===== -->
+  <div id="tab-faltas" class="section-hidden">
+    <div class="faltas-box">
+      <h3>⚠️ Como registrar faltas</h3>
+      <p>
+        Quando um aluno faltar, <strong>não cancele o evento</strong> no Google Calendar — os eventos cancelados somem da API e ficam invisíveis para mim.<br><br>
+        Em vez disso, use uma destas duas opções:<br><br>
+        <strong>Opção A (recomendada):</strong> renomeie o evento para <code>FALTA - Kátia</code> e mantenha na agenda. Assim consigo contabilizar automaticamente no próximo briefing.<br><br>
+        <strong>Opção B:</strong> registre manualmente aqui embaixo a qualquer momento.
+      </p>
+    </div>
+
+    <div class="absence-form">
+      <h3>➕ Registrar falta manualmente</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Aluno</label>
+          <select id="f-aluno"></select>
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="f-data">
+        </div>
+        <div class="form-group">
+          <label>Motivo (opcional)</label>
+          <input type="text" id="f-motivo" placeholder="ex: viagem, doença…">
+        </div>
+        <button class="btn-add" onclick="addFalta()">Registrar</button>
+      </div>
+    </div>
+
+    <div class="absence-list">
+      <h3>Faltas registradas <span style="color:var(--muted);font-weight:400">· sincronizado da Google Agenda (eventos "FALTA - Nome")</span></h3>
+      <div id="faltas-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== CONFIGURAÇÕES ===== -->
+  <div id="tab-config" class="section-hidden">
+    <div class="config-box">
+      <h3>📌 Data de referência (hoje)</h3>
+      <p class="hint">Por padrão o painel usa a data real do seu computador para calcular status, protocolos e alertas de renovação. Só preencha este campo se quiser "congelar" o painel numa data específica (ex: revisar como estava no fim de um mês). Deixe em branco para voltar ao automático.</p>
+      <div class="form-row">
+        <div class="form-group"><label>Data fixa (opcional)</label><input type="date" id="cfg-data-ref" onchange="updateDataReferencia()"></div>
+        <button class="btn-add secondary" onclick="limparDataReferencia()">Usar data de hoje automaticamente</button>
+      </div>
+      <p class="hint" id="cfg-data-ref-status" style="margin-top:10px"></p>
+    </div>
+
+    <div class="config-box">
+      <h3>⏱ Duração do Protocolo</h3>
+      <p class="hint">Define quando o alerta de "Atualizar Protocolo" dispara e quantos ciclos cada cliente tem no contrato.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Semanas por ciclo</label>
+          <select id="cfg-protocolo" onchange="updateProtocoloConfig()">
+            <option value="4">4 semanas</option>
+            <option value="8">8 semanas</option>
+            <option value="12">12 semanas</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="config-box">
+      <h3>📦 Programas</h3>
+      <p class="hint">Programas disponíveis no cadastro de clientes.</p>
+      <div class="list-editable" id="programas-list"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Novo programa</label><input type="text" id="new-programa" placeholder="ex: Consultoria Premium"></div>
+        <button class="btn-add secondary" onclick="addPrograma()">Adicionar</button>
+      </div>
+    </div>
+
+    <div class="config-box">
+      <h3>📅 Períodos de Contrato</h3>
+      <p class="hint">Períodos disponíveis no cadastro de clientes.</p>
+      <div class="list-editable" id="periodos-list"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Novo período</label><input type="text" id="new-periodo" placeholder="ex: Semestral"></div>
+        <button class="btn-add secondary" onclick="addPeriodo()">Adicionar</button>
+      </div>
+    </div>
+
+    <div class="config-box">
+      <h3>🗑 Dados locais</h3>
+      <p class="hint">Todas as alterações (cadastros, status, faltas) ficam salvas neste navegador automaticamente. Use o botão abaixo apenas se quiser voltar aos dados originais importados da agenda.</p>
+      <button class="btn-add danger" onclick="resetDados()">Restaurar dados originais</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== MODAL: CADASTRO/EDIÇÃO DE CLIENTE ===== -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-client')">✕</button>
+    <h2 id="client-modal-title">Novo Cliente</h2>
+    <p class="sub">Preencha os dados do contrato. Campos de aula (histórico) são calculados automaticamente pela agenda.</p>
+    <div class="modal-grid">
+      <div class="form-group full"><label>Nome</label><input type="text" id="c-nome"></div>
+      <div class="form-group"><label>Programa</label><select id="c-programa"></select></div>
+      <div class="form-group"><label>Período</label><select id="c-contrato"></select></div>
+      <div class="form-group"><label>Valor mensal (R$)</label><input type="number" min="0" step="1" id="c-valor"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="c-status">
+          <option>Ativo</option>
+          <option>Congelado</option>
+          <option>Encerrado</option>
+          <option>Cancelado</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Data de início</label><input type="date" id="c-inicio"></div>
+      <div class="form-group"><label>Data de fim</label><input type="date" id="c-fim"></div>
+      <div class="form-group"><label>WhatsApp</label><input type="text" id="c-whatsapp" placeholder="ex: 5531999999999"></div>
+      <div class="form-group full"><label>Tags (separadas por vírgula)</label><input type="text" id="c-tags" placeholder="ex: joelho, objetivo emagrecimento"></div>
+      <div class="form-group full"><label>Observações</label><textarea id="c-obs" rows="3" placeholder="lesões, objetivos, frequência…"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <div class="left">
+        <button class="btn-add" onclick="saveClient()">Salvar</button>
+        <button class="btn-add secondary" onclick="closeModal('modal-client')">Cancelar</button>
+      </div>
+      <button class="btn-add danger" id="btn-delete-client" style="display:none" onclick="deleteClient()">Excluir cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: LISTA DE ALERTA ===== -->
+<div class="modal-overlay" id="modal-alert">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-alert')">✕</button>
+    <h2 id="alert-modal-title">Alerta</h2>
+    <p class="sub" id="alert-modal-sub"></p>
+    <div id="alert-modal-list" class="list-editable"></div>
+    <div class="modal-actions"><div class="left"><button class="btn-add secondary" onclick="closeModal('modal-alert')">Fechar</button></div></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: REATIVAÇÃO ===== -->
+<div class="modal-overlay" id="modal-reativar">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-reativar')">✕</button>
+    <h2>Reativar cliente</h2>
+    <p class="sub" id="reativar-sub"></p>
+    <textarea id="reativar-msg" class="whatsapp-preview" rows="5" style="width:100%;font-family:inherit;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--text)"></textarea>
+    <div class="modal-actions" style="margin-top:14px">
+      <div class="left">
+        <button class="btn-add" onclick="abrirWhatsapp()">Abrir no WhatsApp</button>
+        <button class="btn-add secondary" onclick="copiarMensagem()">Copiar</button>
+      </div>
+      <button class="btn-add secondary" onclick="closeModal('modal-reativar')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="js/app.js"></script>
+
+</body>
+</html>

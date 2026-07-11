@@ -1,0 +1,73 @@
+{
+  "name": "dashboard-sync",
+  "version": "2.0.0",
+  "description": "Professional client management dashboard for Gustavo Personal - Training and Consulting",
+  "main": "index.html",
+  "scripts": {
+    "start": "Open index.html in a web browser",
+    "export": "Data can be exported as CSV from the Registros tab"
+  },
+  "keywords": [
+    "dashboard",
+    "client-management",
+    "personal-training",
+    "consulting",
+    "gestão",
+    "clientes"
+  ],
+  "author": "Gustavo Personal",
+  "license": "PRIVATE",
+  "repository": {
+    "type": "local",
+    "url": "file:///C:/Users/djgus/Claude/Projects/Dashboard-Sync"
+  },
+  "structure": {
+    "index.html": "Main HTML entry point (clean, organized)",
+    "css/styles.css": "Professional dark theme stylesheet",
+    "js/app.js": "Application logic and state management",
+    "data/": "Future: data backup and exports",
+    "README.md": "Project documentation"
+  },
+  "features": {
+    "core": [
+      "Real-time KPIs",
+      "Client CRUD operations",
+      "Status management",
+      "Advanced filtering",
+      "Protocol tracking"
+    ],
+    "alerts": [
+      "Protocol update reminders",
+      "Contract renewal notifications",
+      "Reactivation suggestions"
+    ],
+    "integrations": [
+      "localStorage for persistence",
+      "WhatsApp integration for reactivation",
+      "CSV export for backups"
+    ],
+    "ui": [
+      "Dark theme modern design",
+      "Responsive layout",
+      "Smooth animations",
+      "Modal dialogs"
+    ]
+  },
+  "data-persistence": {
+    "type": "localStorage",
+    "key": "gp_gestao_clientes_v1",
+    "includes": [
+      "clients",
+      "absences",
+      "configurations"
+    ]
+  },
+  "future-improvements": [
+    "Chart.js integration for analytics",
+    "Google Calendar API sync",
+    "Backend API integration",
+    "PDF report generation",
+    "Scheduled messaging",
+    "Trend analysis"
+  ]
+}
