@@ -196,7 +196,7 @@ body {
 /* ===== ALERTS ===== */
 .alerts-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 28px;
 }
@@ -252,6 +252,10 @@ body {
 
 .alert-card.danger .a-count {
   color: var(--red);
+}
+
+.alert-card.travel .a-count {
+  color: var(--accent2);
 }
 
 /* ===== CONTROLS ===== */
@@ -400,6 +404,12 @@ tr:hover td {
   background: rgba(56, 189, 248, 0.15);
   color: var(--blue2);
   border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.tag-viagem {
+  background: rgba(124, 58, 237, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(124, 58, 237, 0.3);
 }
 
 .tag-cancelado {

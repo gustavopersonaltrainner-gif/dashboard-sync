@@ -72,6 +72,10 @@
         <div class="a-top"><span class="a-title">🔁 Ciclos Encerrados</span><span class="a-count" id="alert-encerrados-count">0</span></div>
         <div class="a-desc">Alunos que podem ser reativados.</div>
       </div>
+      <div class="alert-card travel" onclick="openAlertModal('viagem')">
+        <div class="a-top"><span class="a-title">✈️ Em Viagem</span><span class="a-count" id="alert-viagem-count">0</span></div>
+        <div class="a-desc">Alunos viajando e data prevista de retorno.</div>
+      </div>
     </div>
 
     <div class="controls">
@@ -265,6 +269,8 @@
       <div class="form-group"><label>Data de início</label><input type="date" id="c-inicio"></div>
       <div class="form-group"><label>Data de fim</label><input type="date" id="c-fim"></div>
       <div class="form-group"><label>WhatsApp</label><input type="text" id="c-whatsapp" placeholder="ex: 5531999999999"></div>
+      <div class="form-group"><label>Em viagem</label><label style="display:flex;align-items:center;gap:8px;font-weight:400"><input type="checkbox" id="c-viagem" style="width:auto"> Aluno viajando</label></div>
+      <div class="form-group"><label>Retorno previsto</label><input type="date" id="c-viagem-retorno"></div>
       <div class="form-group full"><label>Tags (separadas por vírgula)</label><input type="text" id="c-tags" placeholder="ex: joelho, objetivo emagrecimento"></div>
       <div class="form-group full"><label>Observações</label><textarea id="c-obs" rows="3" placeholder="lesões, objetivos, frequência…"></textarea></div>
     </div>

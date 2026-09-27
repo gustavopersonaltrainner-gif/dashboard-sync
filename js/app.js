@@ -17,8 +17,21 @@ const CORES = {"2026-04":"#4f8ef755","2026-05":"#4f8ef788","2026-06":"#4f8ef7bb"
 
 const LS_KEY = 'gp_gestao_clientes_v1';
 
+// Atualizações pontuais aplicadas uma única vez sobre os dados salvos (e sobre o seed)
+const MIGRACOES = [
+  { id: 'viagem-2026-09', aplicar: (st) => {
+    const marcar = (nome, retorno) => {
+      const c = st.clientes.find(c => c.nome === nome);
+      if (c) c.viagem = { retorno };
+    };
+    marcar('Ana Paula', '2026-10-12');
+    marcar('René', null);
+    marcar('Claudete', null);
+  }},
+];
+
 // --- STATE ---
-let STATE = loadState();
+let STATE = aplicarMigracoes(loadState());
 let editingClientId = null;
 let currentAlertKind = null;
 let mesSel = "2026-07";
@@ -47,6 +60,19 @@ function loadState() {
   };
 }
 
+function aplicarMigracoes(st) {
+  st.migracoes = st.migracoes || [];
+  let mudou = false;
+  MIGRACOES.forEach(m => {
+    if (st.migracoes.includes(m.id)) return;
+    m.aplicar(st);
+    st.migracoes.push(m.id);
+    mudou = true;
+  });
+  if (mudou) { try { localStorage.setItem(LS_KEY, JSON.stringify(st)); } catch(e) { } }
+  return st;
+}
+
 function saveState() {
   localStorage.setItem(LS_KEY, JSON.stringify(STATE));
 }
@@ -58,6 +84,7 @@ function resetDados() {
     faltas: JSON.parse(JSON.stringify(SEED_FALTAS)), 
     config: JSON.parse(JSON.stringify(SEED_CONFIG)) 
   };
+  aplicarMigracoes(STATE);
   saveState();
   initAll();
 }
@@ -107,6 +134,20 @@ function statusClass(s) {
   return { Ativo:'tag-ativo', Congelado:'tag-congelado', Encerrado:'tag-encerrado', Cancelado:'tag-cancelado' }[s] || 'tag-cancelado';
 }
 
+// --- VIAGEM ---
+// Em viagem até o dia anterior ao retorno; sem data de retorno = até desmarcar
+function emViagem(c) {
+  if (!c.viagem) return false;
+  if (!c.viagem.retorno) return true;
+  return diasEntre(getHoje(), parseISO(c.viagem.retorno)) > 0;
+}
+
+function viagemTagHTML(c) {
+  if (!emViagem(c)) return '';
+  const volta = c.viagem.retorno ? ` · volta ${fmtBR(parseISO(c.viagem.retorno)).slice(0,5)}` : '';
+  return `<span class="tag tag-viagem">✈️ Viagem${volta}</span>`;
+}
+
 function getFaltasAluno(nome) {
   return STATE.faltas.filter(f => f.aluno === nome);
 }
@@ -150,7 +191,7 @@ function precisaRenovar(c) {
 
 // --- EXPORT TO CSV ---
 function exportToCSV() {
-  const headers = ['Nome', 'Status', 'Programa', 'Período', 'Valor Mensal', 'Início', 'Fim', 'Aulas Total', 'Última Aula', 'WhatsApp', 'Tags', 'Observações'];
+  const headers = ['Nome', 'Status', 'Programa', 'Período', 'Valor Mensal', 'Início', 'Fim', 'Aulas Total', 'Última Aula', 'WhatsApp', 'Tags', 'Observações', 'Em viagem', 'Retorno viagem'];
   const rows = STATE.clientes.map(c => [
     c.nome,
     c.status,
@@ -163,7 +204,9 @@ function exportToCSV() {
     c.ultima_aula,
     c.whatsapp || '',
     (c.tags || []).join('; '),
-    c.obs || ''
+    c.obs || '',
+    emViagem(c) ? 'Sim' : 'Não',
+    emViagem(c) && c.viagem.retorno ? c.viagem.retorno : ''
   ]);
   
   let csv = headers.join(',') + '\n';
@@ -199,6 +242,7 @@ function updateKPIs() {
   document.getElementById('alert-protocolo-count').textContent = protocolo.length;
   document.getElementById('alert-renovacao-count').textContent = renovacao.length;
   document.getElementById('alert-encerrados-count').textContent = encerrados.length;
+  document.getElementById('alert-viagem-count').textContent = STATE.clientes.filter(emViagem).length;
 }
 
 // --- TABLE RENDERING ---
@@ -230,7 +274,7 @@ function renderTable() {
     const ff = getFaltasAluno(c.nome).length;
     return `<tr>
       <td><div class="aluno-name" onclick="openClientModal(${c.id})">${c.nome}</div></td>
-      <td><span class="tag ${statusClass(c.status)}">${c.status}</span></td>
+      <td><span class="tag ${statusClass(c.status)}">${c.status}</span> ${viagemTagHTML(c)}</td>
       <td><strong style="font-size:18px">${val}</strong> <span style="color:var(--muted);font-size:12px">aulas</span></td>
       <td><div class="sparkline">${sparkHTML(c)}</div></td>
       <td style="color:var(--muted);font-size:13px">${c.ultima_aula}</td>
@@ -272,7 +316,7 @@ function renderCards() {
         </div>
         <div class="cc-footer">
           <div class="cc-tags">${(c.tags||[]).map(t=>`<span class="cc-tag">${t}</span>`).join('') || '<span class="cc-tag">sem tags</span>'}</div>
-          <span class="tag ${statusClass(c.status)}">${c.status}</span>
+          <span>${viagemTagHTML(c)} <span class="tag ${statusClass(c.status)}">${c.status}</span></span>
         </div>
       </div>
     </div>`;
@@ -292,7 +336,7 @@ function renderRegistros() {
   let lista = STATE.clientes.filter(c => c.nome.toLowerCase().includes(q));
   if (statusTableSel !== 'todos') lista = lista.filter(c => c.status === statusTableSel);
   tbody.innerHTML = lista.map(c => `<tr>
-    <td><div class="aluno-name" onclick="openClientModal(${c.id})">${c.nome}</div></td>
+    <td><div class="aluno-name" onclick="openClientModal(${c.id})">${c.nome}</div> ${viagemTagHTML(c)}</td>
     <td>
       <select class="status-select" onchange="quickStatus(${c.id}, this.value)">
         ${['Ativo','Congelado','Encerrado','Cancelado'].map(s => `<option value="${s}" ${s===c.status?'selected':''}>${s}</option>`).join('')}
@@ -351,6 +395,8 @@ function openClientModal(id) {
     document.getElementById('c-whatsapp').value = '';
     document.getElementById('c-tags').value = '';
     document.getElementById('c-obs').value = '';
+    document.getElementById('c-viagem').checked = false;
+    document.getElementById('c-viagem-retorno').value = '';
     del.style.display = 'none';
   } else {
     const c = STATE.clientes.find(c=>c.id===id);
@@ -366,6 +412,8 @@ function openClientModal(id) {
     document.getElementById('c-whatsapp').value = c.whatsapp || '';
     document.getElementById('c-tags').value = (c.tags||[]).join(', ');
     document.getElementById('c-obs').value = c.obs || '';
+    document.getElementById('c-viagem').checked = emViagem(c);
+    document.getElementById('c-viagem-retorno').value = emViagem(c) ? (c.viagem.retorno || '') : '';
     del.style.display = 'inline-block';
   }
   openModal('modal-client');
@@ -385,6 +433,9 @@ function saveClient() {
     whatsapp: document.getElementById('c-whatsapp').value.trim(),
     tags: document.getElementById('c-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
     obs: document.getElementById('c-obs').value.trim(),
+    viagem: document.getElementById('c-viagem').checked
+      ? { retorno: document.getElementById('c-viagem-retorno').value || null }
+      : null,
   };
   if (editingClientId === null) {
     const nextId = Math.max(0, ...STATE.clientes.map(c=>c.id)) + 1;
@@ -420,6 +471,10 @@ function openAlertModal(kind) {
     lista = STATE.clientes.filter(c => c.status === 'Encerrado');
     title = '🔁 Ciclos Encerrados';
     sub = 'Alunos que encerraram o contrato — considere reativar.';
+  } else if (kind === 'viagem') {
+    lista = STATE.clientes.filter(emViagem);
+    title = '✈️ Em Viagem';
+    sub = 'Alunos viajando — sem aulas até o retorno.';
   }
   document.getElementById('alert-modal-title').textContent = title;
   document.getElementById('alert-modal-sub').textContent = sub;
@@ -428,6 +483,8 @@ function openAlertModal(kind) {
     box.innerHTML = '<div class="empty-msg">Nenhum cliente nessa situação no momento.</div>';
   } else if (kind === 'encerrados') {
     box.innerHTML = lista.map(c => `<div class="list-editable-item"><span>${c.nome}</span><button class="btn-add secondary" onclick="closeModal('modal-alert');openReativar(${c.id})">Reativar</button></div>`).join('');
+  } else if (kind === 'viagem') {
+    box.innerHTML = lista.map(c => `<div class="list-editable-item"><span>${c.nome} <span style="color:var(--muted);font-size:12px">${c.viagem.retorno ? '— volta ' + fmtBR(parseISO(c.viagem.retorno)) : '— retorno a definir'}</span></span><button class="btn-icon" onclick="closeModal('modal-alert');openClientModal(${c.id})">→</button></div>`).join('');
   } else {
     box.innerHTML = lista.map(c => `<div class="list-editable-item"><span>${c.nome}</span><button class="btn-icon" onclick="closeModal('modal-alert');openClientModal(${c.id})">→</button></div>`).join('');
   }
