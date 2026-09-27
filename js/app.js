@@ -19,12 +19,22 @@ const LS_KEY = 'gp_gestao_clientes_v1';
 
 // Atualizações pontuais aplicadas uma única vez sobre os dados salvos (e sobre o seed)
 const MIGRACOES = [
-  { id: 'viagem-2026-09', aplicar: (st) => {
+  { id: 'viagem-2026-09-v2', aplicar: (st) => {
+    // Corrige a versão anterior, que marcou Ana Paula por engano
+    if ((st.migracoes || []).includes('viagem-2026-09')) {
+      const ana = st.clientes.find(c => c.nome === 'Ana Paula');
+      if (ana && ana.viagem && ana.viagem.retorno === '2026-10-12') ana.viagem = null;
+    }
     const marcar = (nome, retorno) => {
-      const c = st.clientes.find(c => c.nome === nome);
-      if (c) c.viagem = { retorno };
+      let c = st.clientes.find(c => c.nome === nome);
+      if (!c) {
+        const id = Math.max(0, ...st.clientes.map(c => c.id)) + 1;
+        c = { id, nome, programa: 'A definir', contrato: 'A definir', valor: 0, inicio: null, fim: null, status: 'Ativo', whatsapp: '', obs: '', tags: [], aulas_total: 0, aulas_por_mes: {}, ultima_aula: '—' };
+        st.clientes.push(c);
+      }
+      c.viagem = { retorno };
     };
-    marcar('Ana Paula', '2026-10-12');
+    marcar('Paula', '2026-10-12');
     marcar('René', null);
     marcar('Claudete', null);
   }},
